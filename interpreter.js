@@ -69,17 +69,18 @@ function evaluate(exp,env){
         
         case "prog":
             var val = false;
-            exp.prog.forEach((exp)=>{val = evaluate(exp,env)});
+            exp.prog.forEach((exper)=>{console.log("inside"); console.log(exper);val = evaluate(exper,env)});
             return val;
             
-         case call:
+         case "call":
              var func = evaluate(exp.func,env);
              return func.apply(null,exp.args.map(function (arg){
                  return evaluate(arg,env);
              }))  
           
         default:
-            throw new Error("I don't know how to evaluate " + exp.type);
+            {console.log(exp);
+            throw new Error("I don't know how to evaluate " + exp.type);}
                  
     }
 
@@ -112,7 +113,7 @@ function evaluate(exp,env){
         throw new Error("Can't apply operator " + op);
     }
 
-    function make_lambda(env, exp) {
+    function make_lambda(exp, env) {
         function lambda() {
             var names = exp.vars;
             var scope = env.extend();
@@ -137,8 +138,8 @@ globalEnv.def('time',function(func){
 
 if(typeof process != 'undefined')(function(){
     var util = require("util");
-    globalEnv.def("println",function(val){
-        util.puts(val);
+    globalEnv.def("print",function(val){
+    console.log(val);
     });
     var code = "";
     process.stdin.setEncoding("utf8");
@@ -149,6 +150,7 @@ if(typeof process != 'undefined')(function(){
 
     process.stdin.on("end",function(){
         var ast = parse(tokenStream(InputStream(code)));
+        console.log(util.inspect(ast, {showHidden: false, depth: null}))
         evaluate(ast,globalEnv);
     });
 })();

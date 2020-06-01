@@ -15,10 +15,13 @@ function InputStream  (input){
         var ch = input.charAt(pos++);
         if(ch=='\n') line++,col=0
         else col++;
+        //console.log('inputStream'+ch);
+        return ch;
 
     }
 
     function peek(){
+        //console.log("inputStream"+input.charAt(pos));
         return input.charAt(pos);
     }
 
@@ -26,7 +29,7 @@ function InputStream  (input){
         return peek() == "";
     }
 
-    function croak(){
+    function croak(msg){
         throw new Error(msg + '('+line+':'+col+')');
     }
 

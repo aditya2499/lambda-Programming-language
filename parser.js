@@ -1,4 +1,4 @@
-const {TokenType} = require('./Lexer/TokenGenerator')
+const {TokenType,Token} = require('./Lexer/TokenGenerator')
 function parse(input){
 
     var PRECEDENCE = {
@@ -27,6 +27,7 @@ function parse(input){
     }
 
     function delimiter(start,stop,separator,parser){
+        //console.log('delimiter entered');
         var a=[]
         first = true
         skipPunc(start);
@@ -35,9 +36,13 @@ function parse(input){
             if(first) first=false;
             else skipPunc(separator);
             if(isPunc(stop)) break;
-            a.push(parser());
+            tok = parser();
+            //console.log("returned argument");
+          //  console.log(tok);
+            a.push(tok);
         }
-        skipPunc(stop)
+        skipPunc(stop);
+        //console.log('delimiter exit');
         return a;
 
     }
@@ -48,13 +53,16 @@ function parse(input){
     }
 
     function mayCall(expr){
+        //console.log('mycall entered');
         expr = expr();
+       // console.log('mycall');
         return isPunc('(') ? parseCall(expr) : expr;
     }
 
     function mayBinary(left,myPrec){
         var token = isOp();
         if(token){
+         //   console.log('inside mayBinary');
             var itPrec = PRECEDENCE[token.value];
             if(itPrec>myPrec){
                 input.next();
@@ -91,6 +99,9 @@ function parse(input){
             }
 
             var token = input.next();
+            //console.log("inside parse_");
+           // console.log(token);
+         //   console.log(input.peek());
             if(token.type == TokenType.Number || token.type == TokenType.String || token.type == TokenType.Variable)
                 return token;
             
@@ -102,20 +113,21 @@ function parse(input){
         var prog = delimiter('{','}',';',parseExpression);
         if(prog.length==0) return FALSE;
         if(prog.length==1) return prog[0];
-        return { type : prog , prog};
+        return { type : "prog" ,prog :  prog};
     }
 
     function parseLambda(){
+        //console.log(input.peek());
         return {
             type : "lambda",
-            vars : delimiter('(',')',';',parseVar),
-            body : parseExpression
+            vars : delimiter('(',')',',',parseVar),
+            body : parseExpression()
         }
     }
 
     function parseVar(){
         var variable = input.next();
-        if(varivale.type!=TokenType.Variable) input.croak("Expecting Variable");
+        if(variable.type!=TokenType.Variable) input.croak("Expecting Variable");
         return variable.value;
     }
 
@@ -138,12 +150,12 @@ function parse(input){
         }
         if(isKeyword('else')){
             input.next();
-            ret.else = parseExpression
+            ret.else = parseExpression();
         }
         return ret;
     }
 
-    function parseCall(){
+    function parseCall(func){
         return {
             type: "call",
             func: func,
@@ -153,6 +165,7 @@ function parse(input){
 
     function isPunc(ch) {
         var tok = input.peek();
+        // console.log("isPunc"); console.log(tok);
         return tok && tok.type == "punc" && (!ch || tok.value == ch) && tok;
     }
 
@@ -165,11 +178,13 @@ function parse(input){
         return tok && tok.type == "op" && (!op || tok.value == op) && tok;
     }
     function skipPunc(ch) {
+       // console.log("skip punc entered");
         if (isPunc(ch)) input.next();
         else input.croak("Expecting punctuation: \"" + ch + "\"");
+        //console.log("skip punc exit");
     }
     function skipKeyword(kw) {
-        if (is_kw(kw)) input.next();
+        if (isKeyword(kw)) input.next();
         else input.croak("Expecting keyword: \"" + kw + "\"");
     }
     function skipOp(op) {

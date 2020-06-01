@@ -1,4 +1,3 @@
-
 let TokenType = {
    String : 'str',
    Number : 'num',
@@ -29,10 +28,10 @@ function tokenStream(input){
 
     function readNext(){
         read_while(isWhitespaces)
-
+         //console.log("readNext ");
         if(input.eof()) return null;
         var ch = input.peek();
-        
+        //console.log(ch);
         if(ch === '#'){
             skipComment();
             return readNext();
@@ -42,15 +41,16 @@ function tokenStream(input){
 
         if(isDigit(ch)) return readNumber();
 
-        if(isPunc(ch))
-            return new Token(TokenType.Punc,input.next());
+        if(isPunc(ch)){
+            //console.log(ch);
+            return new Token(TokenType.Punc,input.next());}
         
         if(isOperator(ch)) 
             return readOperator();
         
         if(isIdentSt(ch)) return readIdentifier();
 
-        input.croak("Error at line :"+input.getLine()+" col : "+input.getCol());
+        input.croak("Error at line :"+input.getLine()+" col : "+input.getCol()+" "+ch);
     }
     
     function isDigit(ch){
@@ -58,15 +58,15 @@ function tokenStream(input){
     }
     
     function isIdentSt(ch){
-        return /[a-z_]/i.test(ch);
+        return /[a-z]/i.test(ch);
     }
 
     function isIdent(ch){
-        return isIdentSt || "-0123456789".indexOf(ch)>=0;
+        return isIdentSt(ch) || "-0123456789".indexOf(ch)>=0;
     }
 
     function isPunc(ch){
-        return ",;(){}[]".indexOf(ch)>=0
+        return " ,;(){}[]".indexOf(ch)>=0
     }
 
     function isOperator(ch){
@@ -74,7 +74,7 @@ function tokenStream(input){
     }
     
     function isWhitespaces(ch){
-        return "\t\n".indexOf(ch)>=0
+        return " \t\n".indexOf(ch)>=0
     }
 
     function skipComment(){
@@ -107,13 +107,13 @@ function tokenStream(input){
         num = "";
         hasDot=false
         while(!input.eof()){
-            ch = input.next();
+            ch = input.peek();
             if(ch=='.'){
                 if(hasDot) break;
                 hasDot = true
             }
             
-            if(isDigit(ch)) num+=ch
+            if(isDigit(ch)) {input.next();num+=ch}
             else break
         }
 
@@ -124,26 +124,27 @@ function tokenStream(input){
         iden=""
 
         while(!input.eof()){
-            ch = input.next();
+            ch = input.peek();
             if(isIdent(ch)){
+                input.next();
                 iden+=ch
             }
             else break
         }
-
+        //console.log(iden);
         var type;
         if(Keyword.includes(iden)) type=TokenType.Keyword
         else type = TokenType.Variable
-        
+        //console.log(iden);
         return new Token(type,iden)
     }
 
     function readOperator(){
         op=""
         while(!input.eof()){
-            ch = input.next();
+            ch = input.peek();
             if(isOperator(ch))
-               op+=ch
+              { op+=ch,input.next();}
             else break;   
         }
         return new Token(TokenType.Operator,op);
@@ -151,22 +152,29 @@ function tokenStream(input){
 
     function read_while(predicate) {
         var str = "";
+        //console.log("in");
         while (!input.eof() && predicate(input.peek()))
-            str += input.next();
+            {str += input.next();
+            //console.log("whitespaecs");
+        }
+            //console.log(input.peek());
         return str;
     }
 
     function peek() {
+       // console.log("peek");
+        //console.log(current || (current = readNext()))
         return current || (current = readNext());
     }
     function next() {
         var tok = current;
         current = null;
-        return tok || read_next();
+        //console.log(tok || readNext())
+        return tok || readNext();
     }
     function eof() {
         return peek() == null;
     }
 }
 
-module.exports={tokenStream,TokenType};
+module.exports={tokenStream,TokenType,Token};
